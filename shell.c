@@ -20,11 +20,18 @@ void parse_args( char * line, char ** arg_ary ){
   arg_ary[c + 1] = NULL;
 }
 
+void cd(char * cmd) {
+  if (chdir(cmd) != 0) {
+    perror("cd failed");
+  }
+}
+
 void prompt(){
 	char* temp;
+  char ** args;
   char cwd[1000];
   if (getcwd(cwd, sizeof(cwd)) == NULL){
-    perror("could not get path\n");
+    perror("could not get path");
     exit(1);
   }
   char input[1000]; // adjust
@@ -38,6 +45,9 @@ void prompt(){
 	else if (strcmp(temp, "exit\n") == 0) {
 		exit(1);
 	}
+  else if (strcmp(temp, "cd\n") == 0) {
+    cd("..");
+  }
 	else {
 		printf("%s",input);
 	}
