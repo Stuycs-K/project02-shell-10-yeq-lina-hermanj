@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
 
 int err(){
   printf("errno %d\n",errno);
@@ -20,15 +21,14 @@ void parse_args( char * line, char ** arg_ary ){
 }
 
 void prompt(){
-  // FILE *data = fopen("test.txt","rb");
-  // if (data == NULL){
-  //   printf("broken\n");
-  //   err();
-  //   return;
-  // }
 	char* temp;
+  char cwd[1000];
+  if (getcwd(cwd, sizeof(cwd)) == NULL){
+    perror("could not get path\n");
+    exit(1);
+  }
   char input[1000]; // adjust
-  printf("$ "); // mimic terminal
+  printf("%s $ ",cwd); // mimic terminal
   fflush(stdout);
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
@@ -38,7 +38,6 @@ void prompt(){
 	else if (strcmp(temp, "exit\n") == 0) {
 		exit(1);
 	}
-  // scanf("%s",input);
 	else {
 		printf("%s",input);
 	}
