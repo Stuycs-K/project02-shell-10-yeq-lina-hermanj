@@ -26,15 +26,22 @@ void prompt(){
   //   err();
   //   return;
   // }
+	char* temp;
   char input[1000]; // adjust
   printf("$ "); // mimic terminal
   fflush(stdout);
-  if (fgets(input, sizeof(input), stdin) == NULL){
+	temp = fgets(input, sizeof(input), stdin);
+  if (temp == NULL){
     perror("could not get input\n");
     exit(1);
   }
+	else if (strcmp(temp, "exit\n") == 0) {
+		exit(1);
+	}
   // scanf("%s",input);
-  printf("%s",input);
+	else {
+		printf("%s",input);
+	}
 }
 
 int main(){
