@@ -29,16 +29,19 @@ void cd(char * cmd) {
 void prompt(){
 	char* temp;
   char ** args;
-  char cwd[1000];
+  chdir(getenv("HOME"));
+  char cwd[1024];
   if (getcwd(cwd, sizeof(cwd)) == NULL){
     perror("could not get path");
     exit(1);
   }
-  char input[1000]; // adjust
-  printf("%s $ ",cwd); // mimic terminal
-  fflush(stdout);
+  char input[1024]; // adjust
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
+    if (feof(stdin)){
+      printf("exit (end of file)\n");
+      exit(1);
+    }
     perror("could not get input");
     exit(1);
   }
@@ -51,6 +54,8 @@ void prompt(){
 	else {
 		printf("%s",input);
 	}
+  printf("%s $ ",cwd); // mimic terminal
+  fflush(stdout);
 }
 
 int main(){
