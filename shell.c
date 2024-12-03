@@ -22,6 +22,7 @@ void parse_args( char * line, char ** arg_ary ){
 
 void prompt(){
 	char* temp;
+  chdir(getenv("HOME"));
   char cwd[1000];
   if (getcwd(cwd, sizeof(cwd)) == NULL){
     perror("could not get path\n");
