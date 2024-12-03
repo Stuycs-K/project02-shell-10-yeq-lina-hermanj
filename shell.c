@@ -21,7 +21,7 @@ void cd(char * cmd) {
 void prompt(){
 	char* temp;
   char ** args;
-  chdir(getenv("HOME"));
+  //chdir(getenv("HOME"));
   char cwd[1024];
   if (getcwd(cwd, sizeof(cwd)) == NULL){
     perror("could not get path");
