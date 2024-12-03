@@ -32,7 +32,7 @@ void prompt(){
   fflush(stdout);
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
-    perror("could not get input\n");
+    perror("could not get input");
     exit(1);
   }
 	else if (strcmp(temp, "exit\n") == 0) {
