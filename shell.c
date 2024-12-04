@@ -21,14 +21,18 @@ void cd(char * cmd) {
 void prompt(){
 	char* temp;
   char ** args;
+	char* comd;
   //chdir(getenv("HOME"));
   char cwd[1024];
   if (getcwd(cwd, sizeof(cwd)) == NULL){
     perror("could not get path");
     exit(1);
   }
+	printf("%s $ ",cwd); // mimic terminal
   char input[1024]; // adjust
 	temp = fgets(input, sizeof(input), stdin);
+	comd = strsep(&temp, " ");
+	temp = strsep(&temp, "\n");
   if (temp == NULL){
     if (feof(stdin)){
       printf("exit (end of file)\n");
@@ -37,15 +41,14 @@ void prompt(){
     perror("could not get input");
     exit(1);
   }
-	else if (strcmp(temp, "exit\n") == 0) {
+	else if (strcmp(temp, "exit") == 0) {
 		exit(1);
 	}
-  else if (strcmp(temp, "cd\n") == 0) {
-    cd("..");
+  else if (strcmp(comd, "cd") == 0) {
+    cd(temp);
   }
 	else {
-		printf("%s",input);
+		printf("%s\n",input);
 	}
-  printf("%s $ ",cwd); // mimic terminal
   fflush(stdout);
 }
