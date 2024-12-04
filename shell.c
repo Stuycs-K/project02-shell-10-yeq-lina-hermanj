@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+#include "parse.h"
 
 int err(){
   printf("errno %d\n",errno);
@@ -18,7 +19,7 @@ void cd(char * cmd) {
 
 void prompt(){
 	char* temp;
-  char ** args;
+  char * args[32];
 	char* comd;
   //chdir(getenv("HOME"));
   char cwd[1024];
@@ -30,6 +31,12 @@ void prompt(){
   char input[1024]; // adjust
   fflush(stdout);
 	temp = fgets(input, sizeof(input), stdin);
+
+  // parses the input
+  char copy[1024];
+  strcpy(copy, input);
+  parse_args(copy, args);
+
   if (temp == NULL){
     if (feof(stdin)){
       printf("\n");
