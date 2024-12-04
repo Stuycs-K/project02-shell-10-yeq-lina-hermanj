@@ -31,8 +31,6 @@ void prompt(){
 	printf("%s $ ",cwd); // mimic terminal
   char input[1024]; // adjust
 	temp = fgets(input, sizeof(input), stdin);
-	comd = strsep(&temp, " ");
-	temp = strsep(&temp, "\n");
   if (temp == NULL){
     if (feof(stdin)){
       printf("exit (end of file)\n");
@@ -41,10 +39,12 @@ void prompt(){
     perror("could not get input");
     exit(1);
   }
-	else if (strcmp(temp, "exit") == 0) {
+	else if (strcmp(temp, "exit\n") == 0) {
 		exit(1);
 	}
-  else if (strcmp(comd, "cd") == 0) {
+	comd = strsep(&temp, " ");
+	temp = strsep(&temp, "\n");
+  if (strcmp(comd, "cd") == 0) {
     cd(temp);
   }
 	else {
