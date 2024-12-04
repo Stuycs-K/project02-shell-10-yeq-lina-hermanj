@@ -19,6 +19,7 @@ void cd(char * cmd) {
 void prompt(){
 	char* temp;
   char ** args;
+	char* comd;
   //chdir(getenv("HOME"));
   char cwd[1024];
   if (getcwd(cwd, sizeof(cwd)) == NULL){
@@ -41,11 +42,13 @@ void prompt(){
 	else if (strcmp(temp, "exit\n") == 0) {
 		exit(1);
 	}
-  else if (strcmp(temp, "cd\n") == 0) {
-    cd("..");
+	comd = strsep(&temp, " ");
+	temp = strsep(&temp, "\n");
+  if (strcmp(comd, "cd") == 0) {
+    cd(temp);
   }
 	else {
-		printf("%s",input);
+		printf("%s\n",input);
 	}
   fflush(stdout);
 }
