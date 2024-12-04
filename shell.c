@@ -27,6 +27,7 @@ void prompt(){
     perror("could not get path");
     exit(1);
   }
+	printf("%s $ ",cwd); // mimic terminal
   char input[1024]; // adjust
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
@@ -46,6 +47,5 @@ void prompt(){
 	else {
 		printf("%s",input);
 	}
-  printf("%s $ ",cwd); // mimic terminal
   fflush(stdout);
 }
