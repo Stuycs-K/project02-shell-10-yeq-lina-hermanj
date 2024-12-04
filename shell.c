@@ -10,8 +10,6 @@ int err(){
   exit(1);
 }
 
-
-
 void cd(char * cmd) {
   if (chdir(cmd) != 0) {
     perror("cd failed");
@@ -29,11 +27,13 @@ void prompt(){
   }
 	printf("%s $ ",cwd); // mimic terminal
   char input[1024]; // adjust
+  printf("%s $ ",cwd); // mimic terminal
+  fflush(stdout);
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
     if (feof(stdin)){
-      printf("exit (end of file)\n");
-      exit(1);
+      printf("\n");
+      exit(0);
     }
     perror("could not get input");
     exit(1);
