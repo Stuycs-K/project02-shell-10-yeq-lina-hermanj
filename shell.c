@@ -10,8 +10,6 @@ int err(){
   exit(1);
 }
 
-
-
 void cd(char * cmd) {
   if (chdir(cmd) != 0) {
     perror("cd failed");
@@ -28,6 +26,8 @@ void prompt(){
     exit(1);
   }
   char input[1024]; // adjust
+  printf("%s $ ",cwd); // mimic terminal
+  fflush(stdout);
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
     if (feof(stdin)){
@@ -46,6 +46,4 @@ void prompt(){
 	else {
 		printf("%s",input);
 	}
-  printf("%s $ ",cwd); // mimic terminal
-  fflush(stdout);
 }
