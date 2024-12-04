@@ -16,9 +16,25 @@ void cd(char * cmd) {
   }
 }
 
+void parse_args(char * line){
+  int argc = 1000, position = 0;
+  char ** arg_ary = malloc(argc * sizeof(char*));
+  char * erg;
+  if (!arg_ary){
+    fprintf(stderr, "allocation error\n");
+    exit(0);
+  }
+  char * temp = line;
+  int c = 0;
+  while((arg_ary[c] = strsep(&temp, ";"))){
+    printf("%s", arg_ary[c]);
+    c++;
+  }
+  arg_ary[c + 1] = NULL;
+}
+
 void prompt(){
 	char* temp;
-  char ** args;
 	char* comd;
   //chdir(getenv("HOME"));
   char cwd[1024];
@@ -47,6 +63,7 @@ void prompt(){
     cd(temp);
   }
 	else {
-		printf("%s\n",input);
+		// printf("%s",input);
+    parse_args(input);
 	}
 }
