@@ -31,8 +31,8 @@ void prompt(){
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
     if (feof(stdin)){
-      printf("exit (end of file)\n");
-      exit(1);
+      printf("\n");
+      exit(0);
     }
     perror("could not get input");
     exit(1);
