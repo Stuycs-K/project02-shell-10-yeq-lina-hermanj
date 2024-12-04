@@ -28,7 +28,6 @@ void prompt(){
   }
 	printf("%s $ ",cwd); // mimic terminal
   char input[1024]; // adjust
-  printf("%s $ ",cwd); // mimic terminal
   fflush(stdout);
 	temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
@@ -50,5 +49,4 @@ void prompt(){
 	else {
 		printf("%s\n",input);
 	}
-  fflush(stdout);
 }
