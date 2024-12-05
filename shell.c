@@ -74,6 +74,7 @@ void prompt(){
   // semicolon
   int numcmds = 0;
   while ((comd[numcmds] = strsep(&copy,";")) != NULL){
+    printf("%s\n", comd[numcmds]);
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){

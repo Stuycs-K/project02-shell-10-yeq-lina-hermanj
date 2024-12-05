@@ -5,3 +5,5 @@ ls
 touch abcdef.txt
 ls
 rm abcdef.txt
+ls
+exit
