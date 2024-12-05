@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+#include "parse.h"
+#include "fork.h"
 
 int err(){
   printf("errno %d\n",errno);
