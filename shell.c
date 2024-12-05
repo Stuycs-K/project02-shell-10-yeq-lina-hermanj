@@ -97,6 +97,10 @@ void prompt(){
       }
       else if (p == 0){
         execvp(args[0], args);
+        if (i == (numcmds-1)){
+          printf("%s: command not found\n",args[0]);
+          continue;
+        }
         perror("execvp fail");
         exit(1);
       }
