@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
+#include "fork.h"
 #include <sys/wait.h>
 #include "parse.h"
 
@@ -73,6 +74,7 @@ void prompt(){
   // semicolon
   int numcmds = 0;
   while ((comd[numcmds] = strsep(&copy,";")) != NULL){
+    printf("%s\n", comd[numcmds]);
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
@@ -107,7 +109,7 @@ void prompt(){
       else{
         int n;
         wait(&n);
-      }      
+      }
     }
   }
 }
