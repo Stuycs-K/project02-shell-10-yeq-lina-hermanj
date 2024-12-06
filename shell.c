@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
-#include "fork.h"
+// #include "fork.h"
 #include <sys/wait.h>
 #include "parse.h"
 
@@ -14,27 +14,53 @@ int err(){
 }
 
 void cd(char * cmd) {
+  if (cmd == NULL){
+    cmd = getenv("HOME");
+  }
   if (chdir(cmd) != 0) {
     perror("cd failed");
   }
 }
 
-// void parse_args(char * line){
-//   int argc = 1000, position = 0;
-//   char ** arg_ary = malloc(argc * sizeof(char*));
-//   char * erg;
-//   if (!arg_ary){
-//     fprintf(stderr, "allocation error\n");
-//     exit(0);
-//   }
-//   char * temp = line;
-//   int c = 0;
-//   while((arg_ary[c] = strsep(&temp, ";"))){
-//     printf("%s", arg_ary[c]);
-//     c++;
-//   }
-//   arg_ary[c + 1] = NULL;
-// }
+void execute(char * args[]){
+  pid_t p = fork();
+  if (p < 0){
+    perror("fork fail");
+    exit(1);
+  }
+  else if (p == 0){
+    execvp(args[0], args);
+    fprintf(stderr,"%s: command not found\n",args[0]);
+    exit(1);
+  }
+  else{
+    int n;
+    wait(&n);
+  }
+}
+
+void remove_newline(char * input){
+  int len = strlen(input);
+  if (len > 0 && input[len - 1] == '\n') {
+      input[len - 1] = '\0';
+  }
+}
+
+int getinput(char* input, size_t size){
+  printf("%s $ ",getcwd(input,size)); // mimic terminal
+  fflush(stdout);
+  char* temp = fgets(input, size, stdin);
+  if (temp == NULL){
+    if (feof(stdin)){
+      printf("\n");
+      return 0;
+    }
+    perror("could not get input");
+    exit(1);
+  }
+  remove_newline(input);
+  return 1;
+}
 
 void prompt(){
   char* args[32];
@@ -42,28 +68,15 @@ void prompt(){
   char cwd[1024];
   char input[1024];
   char* temp;
+  
   if (getcwd(cwd, sizeof(cwd)) == NULL){
     perror("could not get path");
     exit(1);
   }
-  printf("%s $ ",cwd); // mimic terminal
-  fflush(stdout);
 
-  // cntrl + d check is here
-  temp = fgets(input, sizeof(input), stdin);
-  if (temp == NULL){
-    if (feof(stdin)){
-      printf("\n");
-      exit(0);
-    }
+  if (getinput(input, sizeof(input)) != 1){
     perror("could not get input");
     exit(1);
-  }
-
-  // remove \n
-  int len = strlen(input);
-  if (len > 0 && input[len - 1] == '\n') {
-      input[len - 1] = '\0';
   }
 
   // copy to operate splicing on
@@ -74,7 +87,6 @@ void prompt(){
   // semicolon
   int numcmds = 0;
   while ((comd[numcmds] = strsep(&copy,";")) != NULL){
-    printf("%s\n", comd[numcmds]);
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
@@ -83,33 +95,10 @@ void prompt(){
       exit(0);
     }
     else if (strcmp(args[0],"cd") == 0){
-      if (args[1] == NULL){
-        cd(getenv("HOME"));
-      }
-      else {
-        cd(args[1]);
-      }
+      cd(args[1]);
     }
     else {
-      pid_t p;
-      p = fork();
-      if (p < 0){
-        perror("fork fail");
-        exit(1);
-      }
-      else if (p == 0){
-        execvp(args[0], args);
-        if (i == (numcmds-1)){
-          printf("%s: command not found\n",args[0]);
-          continue;
-        }
-        perror("execvp fail");
-        exit(1);
-      }
-      else{
-        int n;
-        wait(&n);
-      }
+      execute(args);
     }
   }
 }
