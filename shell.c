@@ -45,9 +45,8 @@ void prompt(){
     perror("could not get path");
     exit(1);
   }
-  printf("%s $ ",cwd); // mimic terminal
-  fflush(stdout);
-
+	printf("%s $ ",cwd); // mimic terminal
+	fflush(stdout);
   // cntrl + d check is here
   temp = fgets(input, sizeof(input), stdin);
   if (temp == NULL){
@@ -58,32 +57,20 @@ void prompt(){
     perror("could not get input");
     exit(1);
   }
-	
+
   // remove \n
   int len = strlen(input);
-  if (len > 0 && input[len - 1] == '\n') {
-      input[len - 1] = '\0';
-  }
-
-	//check if textfile input
-	int newline = 0;
-	for (int i = 0; i < 1024; i++) {
-		if (strcmp(input[i], "\n") {
-			newline++;
-		}
+	if (len > 0 && input[len - 1] == '\n') {
+		input[len - 1] = '\0';
 	}
-	
-  // copy to operate splicing on
   char cop[1024];
   strcpy(cop, input);
   char *copy = cop;
 
   // semicolon
+	//printf("num newline: %d\n", newline);
   int numcmds = 0;
   while ((comd[numcmds] = strsep(&copy,";")) != NULL){
-		if (newline > 0) {
-			printf("%s\n", comd[numcmds]);
-		}
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
