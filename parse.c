@@ -17,19 +17,32 @@ void parse_args( char * line, char ** arg_ary ){
   arg_ary[c + 1] = NULL;
 }
 
-char parse_redirect(char * line, char * buffer){
-  char * temp = line;
+char check(char * line){
   int n = 0;
   char c = ' ';
   while(line[n] != '\0'){
-    printf("%d:", n);
-    printf("%c\n", line[n]);
+    // printf("%d:", n);
+    // printf("%c\n", line[n]);
     if (line[n] == '|' || line[n] == '>' || line[n] == '<'){
-      printf("%s\n", "redirect");
+      // printf("%s\n", "redirect");
       return(line[n]);
     }
     n++;
   }
-  
-  return '\0';
+
+  return '0';
+}
+
+char * parse_redirect(char c, char * line){
+  char * temp = line;
+  char ch[4];
+  ch[0] = ' ';
+  ch[1] = c;
+  ch[2] = ' ';
+  ch[3] = '\0';
+  // printf("%c\n", ch[0]);
+  char * buff;
+  buff = strsep(&temp, ch);
+  // printf("buffer:%s\n", buff);
+  return buff;
 }

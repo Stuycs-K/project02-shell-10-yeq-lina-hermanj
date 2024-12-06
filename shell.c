@@ -91,7 +91,7 @@ void prompt(){
   //redirect parsing
   char c = ' ';
   char buff[1024];
-  
+
   // semicolon
 	//printf("num newline: %d\n", newline);
   int numcmds = 0;
@@ -99,13 +99,26 @@ void prompt(){
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
-    c = parse_redirect(comd[i], buff);
-    printf("char: %c\n", c);
+    c = check(comd[i]);
+    // printf("%c\n", c);
+    if (c == '0'){
+      parse_args(comd[i], args);
+    }
+    else{
+      // printf("%s\n", "else");
+      strcpy(buff, parse_redirect(c, comd[i]));
+      // printf("b:%s\n", buff);
+      parse_args(buff, args);
+      // printf("%s\n", args[1]);
+    }
+
+    // printf("char: %c\n", c);
     //split | < > here and use that instead of comd[i]
     //writing in parse.c
     //takes a char arr, buffer and returns a char
     //returns |<>, writes part before into a buff and consumes that part of arr
-    parse_args(comd[i], args);
+
+    // parse_args(comd[i], args);
     if (strcmp(args[0],"exit") == 0){
       exit(0);
     }
