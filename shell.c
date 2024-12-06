@@ -68,7 +68,7 @@ void prompt(){
 	//check if textfile input
 	int newline = 0;
 	for (int i = 0; i < 1024; i++) {
-		if (input[i] == '\n') {
+		if (strcmp(input[i], "\n") {
 			newline++;
 		}
 	}
