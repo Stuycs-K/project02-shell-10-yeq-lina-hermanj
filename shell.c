@@ -105,11 +105,10 @@ void prompt(){
       parse_args(comd[i], args);
     }
     else{
-      // printf("%s\n", "else");
       strcpy(buff, parse_redirect(c, comd[i]));
-      // printf("b:%s\n", buff);
       parse_args(buff, args);
-      // printf("%s\n", args[1]);
+      //change fd here to redirect
+      //| requires a temp file
     }
 
     // printf("char: %c\n", c);
