@@ -95,10 +95,12 @@ void prompt(){
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
+    c = parse_redirect(comd[i], buff);
+    printf("char: %c\n", c);
     //split | < > here and use that instead of comd[i]
     //writing in parse.c
     //takes a char arr, buffer and returns a char
-    //returns |<>, writes part before into a buff and consumes that part of arr 
+    //returns |<>, writes part before into a buff and consumes that part of arr
     parse_args(comd[i], args);
     if (strcmp(args[0],"exit") == 0){
       exit(0);
