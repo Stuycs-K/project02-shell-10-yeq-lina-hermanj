@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
-#include "fork.h"
 #include <sys/wait.h>
 #include "parse.h"
 
@@ -59,13 +58,21 @@ void prompt(){
     perror("could not get input");
     exit(1);
   }
-
+	
   // remove \n
   int len = strlen(input);
   if (len > 0 && input[len - 1] == '\n') {
       input[len - 1] = '\0';
   }
 
+	//check if textfile input
+	int newline = 0;
+	for (int i = 0; i < 1024; i++) {
+		if (input[i] == '\n') {
+			newline++;
+		}
+	}
+	
   // copy to operate splicing on
   char cop[1024];
   strcpy(cop, input);
@@ -74,7 +81,9 @@ void prompt(){
   // semicolon
   int numcmds = 0;
   while ((comd[numcmds] = strsep(&copy,";")) != NULL){
-    printf("%s\n", comd[numcmds]);
+		if (newline > 0) {
+			printf("%s\n", comd[numcmds]);
+		}
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
