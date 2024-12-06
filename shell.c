@@ -68,7 +68,7 @@ void prompt(){
   char cwd[1024];
   char input[1024];
   char* temp;
-  
+
   if (getcwd(cwd, sizeof(cwd)) == NULL){
     perror("could not get path");
     exit(1);
@@ -90,6 +90,10 @@ void prompt(){
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
+    //split | < > here and use that instead of comd[i]
+    //writing in parse.c
+    //takes a char arr, buffer and returns a char
+    //returns |<>, writes part before into a buff and consumes that part of arr 
     parse_args(comd[i], args);
     if (strcmp(args[0],"exit") == 0){
       exit(0);
