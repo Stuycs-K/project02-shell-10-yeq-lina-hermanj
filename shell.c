@@ -88,6 +88,10 @@ void prompt(){
   strcpy(cop, input);
   char *copy = cop;
 
+  //redirect parsing
+  char c = ' ';
+  char buff[1024];
+  
   // semicolon
 	//printf("num newline: %d\n", newline);
   int numcmds = 0;
