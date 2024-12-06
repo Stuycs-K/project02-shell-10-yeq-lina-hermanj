@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
-// #include "fork.h"
 #include <sys/wait.h>
 #include "parse.h"
 
@@ -79,12 +78,18 @@ void prompt(){
     exit(1);
   }
 
-  // copy to operate splicing on
+  // remove \n
+  int len = strlen(input);
+	if (len > 0 && input[len - 1] == '\n') {
+		input[len - 1] = '\0';
+	}
+	// copy to operate splicing on
   char cop[1024];
   strcpy(cop, input);
   char *copy = cop;
 
   // semicolon
+	//printf("num newline: %d\n", newline);
   int numcmds = 0;
   while ((comd[numcmds] = strsep(&copy,";")) != NULL){
     numcmds++;
