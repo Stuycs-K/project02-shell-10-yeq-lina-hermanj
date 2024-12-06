@@ -55,8 +55,6 @@ int getinput(char* input, size_t size){
       printf("\n");
       return 0;
     }
-    perror("could not get input");
-    exit(1);
   }
   remove_newline(input);
   return 1;
@@ -75,7 +73,6 @@ void prompt(){
   }
 
   if (getinput(input, sizeof(input)) != 1){
-    perror("could not get input");
     exit(1);
   }
 
