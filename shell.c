@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <unistd.h>
-// #include "fork.h"
 #include <sys/wait.h>
 #include "parse.h"
 
@@ -76,22 +75,46 @@ void prompt(){
     exit(1);
   }
 
-  // copy to operate splicing on
+  // remove \n
+  int len = strlen(input);
+	if (len > 0 && input[len - 1] == '\n') {
+		input[len - 1] = '\0';
+	}
+	// copy to operate splicing on
   char cop[1024];
   strcpy(cop, input);
   char *copy = cop;
 
+  //redirect parsing
+  char c = ' ';
+  char buff[1024];
+
   // semicolon
+	//printf("num newline: %d\n", newline);
   int numcmds = 0;
   while ((comd[numcmds] = strsep(&copy,";")) != NULL){
     numcmds++;
   }
   for (int i = 0; i < numcmds; i++){
+    c = check(comd[i]);
+    // printf("%c\n", c);
+    if (c == '0'){
+      parse_args(comd[i], args);
+    }
+    else{
+      strcpy(buff, parse_redirect(c, comd[i]));
+      parse_args(buff, args);
+      //change fd here to redirect
+      //| requires a temp file
+    }
+
+    // printf("char: %c\n", c);
     //split | < > here and use that instead of comd[i]
     //writing in parse.c
     //takes a char arr, buffer and returns a char
-    //returns |<>, writes part before into a buff and consumes that part of arr 
-    parse_args(comd[i], args);
+    //returns |<>, writes part before into a buff and consumes that part of arr
+
+    // parse_args(comd[i], args);
     if (strcmp(args[0],"exit") == 0){
       exit(0);
     }
