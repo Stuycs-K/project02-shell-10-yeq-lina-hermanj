@@ -12,6 +12,7 @@ void parse_args( char * line, char ** arg_ary ){
   int c = 0;
   while((arg_ary[c] = strsep(&temp, " "))){
     // printf("%s\n", arg_ary[c]);
+    if (strlen(arg_ary[c]) == 0) continue;
     c++;
   }
   arg_ary[c + 1] = NULL;
@@ -35,14 +36,34 @@ char check(char * line){
 
 char * parse_redirect(char c, char * line){
   char * temp = line;
-  char ch[4];
-  ch[0] = ' ';
-  ch[1] = c;
-  ch[2] = ' ';
-  ch[3] = '\0';
-  // printf("%c\n", ch[0]);
-  char * buff;
-  buff = strsep(&temp, ch);
-  // printf("buffer:%s\n", buff);
-  return buff;
+  char * file;
+  if (c == '>'){
+    file = strchr(temp, '>') + 1;
+  }
+  else if (c == '<'){
+    file = strchr(temp, '<') + 1;
+  }
+  else {
+    return NULL;
+  }
+  while (*file == ' ') file++;
+  *strchr(temp,c) = '\0';
+  return file;
+
+  // char * buffer;
+  // char * sep = c == '>' ? ">" : (c == '<' ? "<" : ">>");
+  // buffer = strsep(&temp, sep);
+  // return temp;
+
+
+  // char ch[4];
+  // ch[0] = ' ';
+  // ch[1] = c;
+  // ch[2] = ' ';
+  // ch[3] = '\0';
+  // // printf("%c\n", ch[0]);
+  // char * buff;
+  // buff = strsep(&temp, ch);
+  // // printf("buffer:%s\n", buff);
+  // return buff;
 }
