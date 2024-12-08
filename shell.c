@@ -177,6 +177,7 @@ void prompt(){
         num_pipes++;
       }
       pipefunc(pipe_cmds,num_pipes);
+      continue;
     }
     else if (c == '>' || c == '<'){
       char *file = parse_redirect(c, command);
@@ -190,6 +191,7 @@ void prompt(){
       }
       else {
         wait(NULL);
+        continue;
       }
     }
 
