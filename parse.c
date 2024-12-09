@@ -24,7 +24,7 @@ char check(char * line){
   while(line[n] != '\0'){
     // printf("%d:", n);
     // printf("%c\n", line[n]);
-    if (line[n] == '|' || line[n] == '>' || line[n] == '<'){
+    if (line[n] == '>' || line[n] == '<'){
       // printf("%s\n", "redirect");
       return(line[n]);
     }
@@ -34,21 +34,22 @@ char check(char * line){
   return '0';
 }
 
-char * parse_redirect(char c, char * line){
-  char * temp = line;
+char * parse_right(char c, char * line){
+  char * temp = strcpy(temp, line);
   char * file;
   if (c == '>'){
-    file = strchr(temp, '>') + 1;
+    file = strchr(temp, '>') + 2;
   }
   else if (c == '<'){
-    file = strchr(temp, '<') + 1;
+    file = strchr(temp, '<') + 2;
   }
   else {
     return NULL;
   }
-  while (*file == ' ') file++;
-  *strchr(temp,c) = '\0';
+  // while (*file == ' ') file++;
+  *strchr(line,c) = '\0';
   return file;
+
 
   // char * buffer;
   // char * sep = c == '>' ? ">" : (c == '<' ? "<" : ">>");
@@ -66,4 +67,10 @@ char * parse_redirect(char c, char * line){
   // buff = strsep(&temp, ch);
   // // printf("buffer:%s\n", buff);
   // return buff;
+}
+char * parse_left(char c, char * line){
+  char * temp = strcpy(temp, line);
+  *(strchr(temp,c) - 1) = '\0';
+  return temp;
+
 }
