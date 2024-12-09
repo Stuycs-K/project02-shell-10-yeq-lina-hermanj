@@ -46,3 +46,13 @@ char * parse_redirect(char c, char * line){
   // printf("buffer:%s\n", buff);
   return buff;
 }
+
+void greater_than(char * file, char * args[]) {
+	int fd1 = open(file, O_WRONLY);
+	int stdout = STDOUT_FILENO;
+	int backup_stdout = dup( stdout );
+	dup2(fd1, stdout);
+	execute(args);
+	//fflush(stdout);
+	dup2(backup_stdout, stdout);
+}
