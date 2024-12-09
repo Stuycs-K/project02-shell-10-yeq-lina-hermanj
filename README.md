@@ -11,12 +11,11 @@ Joy Herman, Abigail Lin, Leo Ye
 4. exit and ^d to exit shell
 5. ./shell < lines.txt
    - but it prints next to the prompt
-6. 
+6. redirects but not chained together
 
 ## Attempted to Implement
-1. Redirecting stdout >
-2. Redirecting stdin <
-3. Piping |
+1. combining redirects and pipes together
+
 
 ## Function Headers
 int err(){}
@@ -25,6 +24,23 @@ int err(){}
 void cd(char * cmd) {}
 - cd
 
-void execute(char * args[]){}
-- execvp
+void remove_newline(char * input){}
+- removes the new line
 
+int getinput(char* input, size_t size){}
+- takes the input
+
+char hasPipe(char * line){}
+- checks for pipe
+
+void prompt(){}
+- main logic, runs everything. parses and execs in here
+
+char * parse_right(char c, char * line){}
+- takes inputs with redirects and returns a pointer to the right side of the redirect and adds a terminating 0 to the end of the left.
+
+void parse_args( char * line, char ** arg_ary ){}
+- parses the input into an arg array for execvp
+
+char check(char * line){}
+- checks for redirects and returns the type of redirect
