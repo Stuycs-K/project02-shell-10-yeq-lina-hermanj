@@ -27,54 +27,7 @@ char checkorder(char * line){
     }
   }
   return (char)first;
-  // int n = 0;
-  // char c = ' ';
-  // while(line[n] != '\0'){
-  //   // printf("%d:", n);
-  //   // printf("%c\n", line[n]);
-  //   if (line[n] == '|' || line[n] == '>' || line[n] == '<'){
-  //     // printf("%s\n", "redirect");
-  //     return(line[n]);
-  //   }
-  //   n++;
-  // }
-
-  // return '0';
 }
-
-// char * parse_redirect(char c, char * line){
-//   char * temp = line;
-//   char * file;
-//   if (c == '>'){
-//     file = strchr(temp, '>') + 1;
-//   }
-//   else if (c == '<'){
-//     file = strchr(temp, '<') + 1;
-//   }
-//   else {
-//     return NULL;
-//   }
-//   while (*file == ' ') file++;
-//   *strchr(temp,c) = '\0';
-//   return file;
-
-//   // char * buffer;
-//   // char * sep = c == '>' ? ">" : (c == '<' ? "<" : ">>");
-//   // buffer = strsep(&temp, sep);
-//   // return temp;
-
-
-//   // char ch[4];
-//   // ch[0] = ' ';
-//   // ch[1] = c;
-//   // ch[2] = ' ';
-//   // ch[3] = '\0';
-//   // // printf("%c\n", ch[0]);
-//   // char * buff;
-//   // buff = strsep(&temp, ch);
-//   // // printf("buffer:%s\n", buff);
-//   // return buff;
-// }
 
 void parse_redir(char *input){
   char *arg;
@@ -108,7 +61,7 @@ void parse_redir(char *input){
     char *comdarg;
     char **comdargs = malloc(4096);
     while ((comdarg = strtok_r(args[0], " ", &args[0]))){
-      comdarg[count] = comdarg;
+      comdargs[count] = comdarg;
       count++;
     }
     char *file = strtok(args[1], " ");
@@ -140,13 +93,13 @@ void parse_pipe(char *input){
   int count;
   // first, parse for pipes. if none, then parse for redir
   if (strchr(input, '|')){
-    int num_pipes = count_pipes(input);
+    int num_pipes = pipe_count(input);
     count = 0;
     while((arg = strtok_r(input, "|", &input))) {
         args[count] = arg; 
         count++; 
     }
-    handle_pipes(args,num_pipes);
+    pipefunc(args,num_pipes);
     free(args);
   }
   else {
