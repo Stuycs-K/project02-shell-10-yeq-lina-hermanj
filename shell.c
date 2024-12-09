@@ -87,6 +87,64 @@ void redirection(char c, char *file){
   close(fd);
 }
 
+void less_than(char **comd, char *input) {
+	int stdin = dup(0);
+  int fd = open(input, O_RDONLY);
+  if (fd == -1){
+    perror("cannot open file");
+    return;
+  }
+  dup2(fd, 0);
+  pid_t pid = fork();
+  if (pid == -1){
+    perror("cannot fork");
+    return;
+  }
+  else if (pid == 0){
+    execvp(comd[0],comd);
+    perror("execvp failed");
+    exit(1);
+  }
+  int status;
+  wait(&status);
+  dup2(stdin, 0);
+  close(stdin);
+  close(fd);
+  return;
+}
+
+void greater_than(char **comd, char *output, int append_flag) {
+  int flags;
+  int stdout = dup(1);
+  if (append_flag == 1){
+    flags = (O_RDWR | O_CREAT | O_APPEND);
+  }
+  else {
+    flags = (O_RDWR | O_CREAT);
+  }
+	int fd = open(output, flags, 0644);
+  if (file == -1){
+    perror("cannot open file");
+    return;
+  }
+	dup2(fd, 1);
+	pid_t pid = fork();
+  if (pid == -1){
+    perror("fork failed");
+  }
+  else if (pid == 0){
+    execvp(comd[0], comd);
+    perror("execvp failed");
+    exit(1);
+  }
+  int status;
+  wait(&status);
+  dup2(stdout, 1);
+  close(stdout);
+  close(fd);
+  return;
+}
+
 void pipefunc(char *commands[], int num_commands){
   char *temp = "temp";
   
