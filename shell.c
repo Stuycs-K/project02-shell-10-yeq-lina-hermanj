@@ -150,17 +150,20 @@ void prompt(){
   }
   for (int i = 0; i < numcmds; i++){
     c = check(comd[i]);
-
-    // // printf("%c\n", c);
-    // if (c == '0'){
-    //   parse_args(comd[i], args);
-    // }
-    // else{
-    //   strcpy(buff, parse_redirect(c, comd[i]));
-    //   parse_args(buff, args);
-    //   //change fd here to redirect
-    //   //| requires a temp file
-    // }
+    // printf("%c\n", c);
+    if (c == '0'){
+      parse_args(comd[i], args);
+    }
+		else if (c == '>'){
+			parse_args(buff, args);
+			greater_than("files.txt", args);
+		}
+		else{
+      strcpy(buff, parse_redirect(c, comd[i]));
+      parse_args(buff, args);
+      //change fd here to redirect
+      //| requires a temp file
+    }
 
     // printf("char: %c\n", c);
     //split | < > here and use that instead of comd[i]
