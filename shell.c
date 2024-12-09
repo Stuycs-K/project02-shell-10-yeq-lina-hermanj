@@ -68,6 +68,9 @@ void redirection(char c, char *file){
   else if (c == '<'){
     fd = open(file, O_RDONLY);
   }
+  else if (strcmp(&c, ">>") == 0){
+    fd = open(file, O_WRONLY | O_CREAT | O_APPEND, 0644 );
+  }
   else {
     return;
   }
@@ -85,34 +88,86 @@ void redirection(char c, char *file){
 }
 
 void pipefunc(char *commands[], int num_commands){
-  int fd[2], in_fd = STDIN_FILENO;
-  for (int i = 0; i < num_commands; i++) {
-    pipe(fd);
-    pid_t p = fork();
-    if (p == 0) {
-      dup2(in_fd, STDIN_FILENO);
-      if (i < num_commands - 1) {
-        dup2(fd[1], STDOUT_FILENO);
-      }
-      close(fd[0]);
-      char *args[32];
-      parse_args(commands[i], args);
-      execvp(args[0], args);
-      perror("execvp failed");
-      exit(1);
-    } else if (p < 0) {
-      perror("fork failed");
-      exit(1);
-    }
-    close(fd[1]);
-    in_fd = fd[0];
+  char *temp = "temp";
+  
+  // write to temp
+  char *arg1[100];
+  parse_args(commands[0],arg1);
+  pid_t p1 = fork();
+  if (p1 == 0){
+    int fd = open(temp, O_WRONLY | O_CREAT | O_TRUNC, 0644 );
+    dup2(fd, STDOUT_FILENO);
+    close(fd);
+    execvp(arg1[0],arg1);
+    perror("execvp failed");
+    exit(1);
+  }
+  else {
     wait(NULL);
   }
+
+  // read from temp
+  char *arg2[100];
+  parse_args(commands[1],arg2);
+  pid_t p2 = fork();
+  if (p2 == 0){
+    int fd = open(temp, O_RDONLY);
+    dup2(fd, STDIN_FILENO);
+    close(fd);
+    execvp(arg2[0],arg2);
+    perror("execvp failed");
+    exit(1);
+  }
+  else {
+    wait(NULL);
+  }
+
+  remove(temp);
+  
+  // int fd[2], in_fd = STDIN_FILENO;
+  // for (int i = 0; i < num_commands; i++) {
+  //   pipe(fd);
+  //   pid_t p = fork();
+  //   if (p == 0) {
+  //     dup2(in_fd, STDIN_FILENO);
+  //     if (i < num_commands - 1) {
+  //       dup2(fd[1], STDOUT_FILENO);
+  //     }
+  //     close(fd[0]);
+  //     char *args[32];
+  //     parse_args(commands[i], args);
+  //     execvp(args[0], args);
+  //     perror("execvp failed");
+  //     exit(1);
+  //   } else if (p < 0) {
+  //     perror("fork failed");
+  //     exit(1);
+  //   }
+  //   close(fd[1]);
+  //   in_fd = fd[0];
+  //   wait(NULL);
+  // }
+}
+
+void nospecial(char **args){
+  pid_t pid = fork();
+  if (pid == -1){
+    perror("fork failed");
+    return;
+  }
+  else if (pid == 0){
+    execvp(args[0], args);
+    perror("execvp");
+    exit(1);
+  }
+  int status;
+  wait(&status);
+  return;
 }
 
 void prompt(){
   char* args[32];
-	char* comd[32];
+	char ** cmds = malloc((sizeof(char)*1024)*1024);
   char cwd[1024];
   char input[1024];
   char* temp;
@@ -126,11 +181,6 @@ void prompt(){
     exit(1);
   }
 
-  // remove \n
-  // int len = strlen(input);
-	// if (len > 0 && input[len - 1] == '\n') {
-	// 	input[len - 1] = '\0';
-	// }
   remove_newline(input);
 
 	// copy to operate splicing on
@@ -172,6 +222,7 @@ void prompt(){
     int num_pipes = 0;
     char *command = comd[i];
 
+    // if | is in the cmd, then split up the commands into things to pipe
     if (strchr(command, '|')){
       while ((pipe_cmds[num_pipes] = strsep(&command,"|")) != NULL){
         num_pipes++;
@@ -179,6 +230,7 @@ void prompt(){
       pipefunc(pipe_cmds,num_pipes);
       continue;
     }
+    // 
     else if (c == '>' || c == '<'){
       char *file = parse_redirect(c, command);
       parse_args(command,args);
@@ -194,29 +246,6 @@ void prompt(){
         continue;
       }
     }
-
-    // if (c == '|'){
-    //   char *pipe_cmds[2];
-    //   pipe_cmds[0] = strsep(&comd[i], "|");
-    //   pipe_cmds[1] = comd[i];
-    //   pipefunc(pipe_cmds[0],pipe_cmds[1]);
-    //   continue;
-    // }
-    // if (c == '>' || c == '<'){
-    //   char *file = parse_redirect(c, comd[i]);
-    //   parse_args(buff, args);
-    //   pid_t p = fork();
-    //   if (p == 0){
-    //     redirection(c, file);
-    //     execvp(args[0], args);
-    //     perror("exec failed");
-    //     exit(1);
-    //   }
-    //   else{
-    //     wait(NULL);
-    //     continue;
-    //   }
-    // }
 
     parse_args(comd[i], args);
 
