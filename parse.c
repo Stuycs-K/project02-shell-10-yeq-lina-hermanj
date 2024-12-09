@@ -48,11 +48,19 @@ char * parse_redirect(char c, char * line){
 }
 
 void greater_than(char * file, char * args[]) {
-	int fd1 = open(file, O_WRONLY);
+	int fd1 = open(file, O_RDWR | O_CREAT, 0755);
 	int stdout = STDOUT_FILENO;
 	int backup_stdout = dup( stdout );
-	dup2(fd1, stdout);
+	printf("dup\n");
+	//dup2(fd1, stdout);
+	printf("dup2\n");
+	int i = 0;
+	while (args[i] != NULL) {
+		printf("args[i]: %s\n", args[i]);
+		i++;
+	}
 	execute(args);
+	printf("execute\n");
 	//fflush(stdout);
 	dup2(backup_stdout, stdout);
 }
