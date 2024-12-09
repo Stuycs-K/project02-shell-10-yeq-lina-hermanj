@@ -109,7 +109,7 @@ void prompt(){
           b = dup(STDIN_FILENO);
           cFd = STDIN_FILENO;
           dup2(tempFd, STDIN_FILENO);
-          printf("%s\n", str);
+          // printf("%s\n", str);
           parse_args(str, args);
             p = fork();
             if (p == 0){
