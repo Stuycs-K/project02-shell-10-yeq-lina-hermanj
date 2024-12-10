@@ -7,7 +7,7 @@
 #include "shell.h"
 
 int main(){
-  char input[1000];
+  char input[1024];
   while (1){
     prompt();
   }

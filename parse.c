@@ -7,6 +7,10 @@
 #include <errno.h>
 #include "shell.h"
 
+// void parse_args( char * line, char ** arg_ary ): breaks apart a line into an array of arguments
+// splits input by spaces, skips empty spaces, terminates array with NULL
+// char *line: input string
+// char *arg_ary: array where args stored
 void parse_args( char * line, char ** arg_ary ){
   char * temp = line;
   int c = 0;
@@ -18,59 +22,100 @@ void parse_args( char * line, char ** arg_ary ){
   arg_ary[c + 1] = NULL;
 }
 
-char check(char * line){
-  int n = 0;
-  char c = ' ';
-  while(line[n] != '\0'){
-    // printf("%d:", n);
-    // printf("%c\n", line[n]);
-    if (line[n] == '>' || line[n] == '<'){
-      // printf("%s\n", "redirect");
-      return(line[n]);
+// char checkorder(char * line): finds the first > or <
+// goes through string until finds < or >
+// char *line: input string
+char checkorder(char * line){
+  int first;
+  for (int i = 0; i < strlen(line); i++){
+    if (line[i] == '<' || line[i] == '>'){
+      first = line[i];
+      break;
     }
-    n++;
   }
-
-  return '0';
+  return (char)first;
 }
 
-char * parse_right(char c, char * line){
-  char * temp = strcpy(temp, line);
-  char * file;
-  if (c == '>'){
-    file = strchr(temp, '>') + 2;
-  }
-  else if (c == '<'){
-    file = strchr(temp, '<') + 2;
+// void parse_redir(char *input): parses redirection (> >> <) and calls each func to exec it
+// checks if input has redirect, if not just execute. apply  flags, and call proper func
+// char *line: input string
+void parse_redir(char *input){
+  char *arg;
+  char **args = malloc(4096);
+  int flag;
+  int append_flag = 0;
+  int order_flag = 0;
+  int count = 0;
+  if ((strchr(input, '<')) || (strstr(input, ">"))) {
+    // check for append flag
+    if (strstr(input, " >> ")){
+      append_flag = 1;
+    }
+    // input redir
+    if (strchr(input, '<')){
+      while ((arg = strtok_r(input, "<", &input))){
+        args[count] = arg;
+        count++;
+      }
+      flag = 1;
+    }
+    // output redir
+    else if (strstr(input, ">")) {
+      while ((arg = strtok_r(input, ">", &input))){
+        args[count] = arg;
+        count++;
+      }
+      flag = 0;
+    }
+    count = 0;
+    char *comdarg;
+    char **comdargs = malloc(4096);
+    while ((comdarg = strtok_r(args[0], " ", &args[0]))){
+      comdargs[count] = comdarg;
+      count++;
+    }
+    char *file = strtok(args[1], " ");
+    // call funcs based on each flag
+    if (flag == 0){
+      greater_than(comdargs,file,append_flag);
+    }
+    else if (flag == 1){
+      less_than(comdargs,file);
+    }
+    free(comdarg);
   }
   else {
-    return NULL;
+    count = 0;
+    while ((arg = strtok_r(input, " ", &input))){
+      args[count] = arg;
+      count++;
+    }
+    execute(args);
   }
-  // while (*file == ' ') file++;
-  *strchr(line,c) = '\0';
-  return file;
-
-
-  // char * buffer;
-  // char * sep = c == '>' ? ">" : (c == '<' ? "<" : ">>");
-  // buffer = strsep(&temp, sep);
-  // return temp;
-
-
-  // char ch[4];
-  // ch[0] = ' ';
-  // ch[1] = c;
-  // ch[2] = ' ';
-  // ch[3] = '\0';
-  // // printf("%c\n", ch[0]);
-  // char * buff;
-  // buff = strsep(&temp, ch);
-  // // printf("buffer:%s\n", buff);
-  // return buff;
+  free(args);
+  return;
 }
-char * parse_left(char c, char * line){
-  char * temp = strcpy(temp, line);
-  *(strchr(temp,c) - 1) = '\0';
-  return temp;
 
+// void parse_pipe(char *input): parses pipe and calls pipefunc to exec it
+// checks if input has pipe, if not call parse for redir
+// char *line: input string
+void parse_pipe(char *input){
+  char *arg;
+  char **args = malloc(4096);
+  int count;
+  // first, parse for pipes. if none, then parse for redir
+  if (strchr(input, '|')){
+    int num_pipes = pipe_count(input);
+    count = 0;
+    while((arg = strtok_r(input, "|", &input))) {
+        args[count] = arg; 
+        count++; 
+    }
+    pipefunc(args,num_pipes);
+    free(args);
+  }
+  else {
+    parse_redir(input);
+  }
+  return;
 }

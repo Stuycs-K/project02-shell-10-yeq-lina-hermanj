@@ -7,12 +7,15 @@
 #include <fcntl.h>
 #include "parse.h"
 
+// int err(): prints out error message
 int err(){
   printf("errno %d\n",errno);
   printf("%s\n",strerror(errno));
   exit(1);
 }
 
+// void cd(char * cmd): takes a char* cmd, checks if has no args (sends to home) or args (takes to directed path)
+// char* cmd: the path
 void cd(char * cmd) {
   if (cmd == NULL){
     cmd = getenv("HOME");
@@ -22,6 +25,27 @@ void cd(char * cmd) {
   }
 }
 
+// void execute(char * args[]): takes a char* args[], forks and execs child
+// char* args[]: args for command to exec
+void execute(char * args[]){
+  pid_t p = fork();
+  if (p < 0){
+    perror("fork fail");
+    exit(1);
+  }
+  else if (p == 0){
+    execvp(args[0], args);
+    fprintf(stderr,"%s: command not found\n",args[0]);
+    exit(1);
+  }
+  else{
+    int n;
+    wait(&n);
+  }
+}
+
+// void remove_newline(char * input): takes a char* input, removes newline from input
+// char* input: input line to change
 void remove_newline(char * input){
   int len = strlen(input);
   if (len > 0 && input[len - 1] == '\n') {
@@ -29,6 +53,9 @@ void remove_newline(char * input){
   }
 }
 
+// int getinput(char* input, size_t size): takes a char* input, size_t size. mimics terminal, takes userinput, and checks for cntrl+d. returns 1 if succeeds, 0 if not
+// char* input: buffer to store input
+// size_t size: buffer size
 int getinput(char* input, size_t size){
   printf("%s $ ",getcwd(input,size)); // mimic terminal
   fflush(stdout);
@@ -43,40 +70,210 @@ int getinput(char* input, size_t size){
   return 1;
 }
 
+// int pipe_count(char *args): takes a char* args, and counts the number of pipes
+// char *args: array of arguments in the input
+int pipe_count(char *args){
+  int count = 0;
+  for (int i = 0; i < strlen(args); i++){
+    count += (args[i] == '|');
+  }
+  return count;
+}
 
-char hasPipe(char * line){
-  int n = 0;
-  char c = ' ';
-  while(line[n] != '\0'){
-    if (line[n] == '|'){
-      return(line[n]);
+// void redirection(char **comd, char *input, char *output, int append_flag): for < > >>, assigns proper file perms, then forks and execvps proper operation, restores file descriptors after
+// char **comd: the command to execute
+// char *input: the input file name
+// char *output: the output file name
+// int append_flag: 1 for >>, 0 for > and <
+void redirection(char **comd, char *input, char *output, int append_flag){
+  int flags;
+  if (append_flag = 1){
+    flags = (O_RDWR | O_CREAT | O_APPEND);
+  }
+  else {
+    flags = (O_RDWR | O_CREAT);
+  }
+  // fds
+  int stdin = dup(0);
+  int stdout = dup(1);
+  int fd_in = open(input, O_RDONLY);
+  int fd_out = open(output, flags, 0644);
+  if (fd_in == -1){
+    perror("open input failed");
+    return;
+  }
+  if (fd_out == -1){
+    perror("open output failed");
+    return;
+  }
+  dup2(fd_in,0);
+  dup2(fd_out,1);
+  // fork and execvp
+  pid_t pid = fork();
+  if (pid == -1){
+    perror("fork failed");
+    return;
+  }
+  else if (pid == 0){
+    execvp(comd[0],comd);
+    perror("execvp failed");
+    exit(1);
+  }
+  int status;
+  wait(&status);
+  // clean
+  dup2(stdin,0);
+  dup2(stdout,1);
+  close(stdin);
+  close(stdout);
+  close(fd_in);
+  close(fd_out);
+  return;
+}
+
+// void less_than(char **comd, char *input): redirects input from a file.
+// redirects stdin into input file, forks + execs, restores stdin
+// char **comd: the command to execute
+// char *input: the input file name
+void less_than(char **comd, char *input) {
+	int stdin = dup(0);
+  int fd = open(input, O_RDONLY);
+  if (fd == -1){
+    perror("cannot open file");
+    return;
+  }
+  dup2(fd, 0);
+  pid_t pid = fork();
+  if (pid == -1){
+    perror("cannot fork");
+    return;
+  }
+  else if (pid == 0){
+    execvp(comd[0],comd);
+    perror("execvp failed");
+    exit(1);
+  }
+  int status;
+  wait(&status);
+  dup2(stdin, 0);
+  close(stdin);
+  close(fd);
+  return;
+}
+
+// void greater_than(char **comd, char *output, int append_flag): handles output redirection (>)
+// redirects stdout into output file, forks + execs, restores stout
+// char **comd: the command to execute
+// char *input: the input file name
+// int append_flag: 1 for append (>>), 0 for overwrite (>)
+void greater_than(char **comd, char *output, int append_flag) {
+  int flags;
+  int stdout = dup(1);
+  if (append_flag == 1){
+    flags = (O_RDWR | O_CREAT | O_APPEND);
+  }
+  else {
+    flags = (O_RDWR | O_CREAT);
+  }
+	int fd = open(output, flags, 0644);
+  if (fd == -1){
+    perror("cannot open file");
+    return;
+  }
+	dup2(fd, 1);
+	pid_t pid = fork();
+  if (pid == -1){
+    perror("fork failed");
+  }
+  else if (pid == 0){
+    execvp(comd[0], comd);
+    perror("execvp failed");
+    exit(1);
+  }
+  int status;
+  wait(&status);
+  dup2(stdout, 1);
+  close(stdout);
+  close(fd);
+  return;
+}
+
+// void pipefunc(char **comd, int num_commands): handles pipes
+// calls pipe() for each pipe, forks + execs, connects stdin with fd[0] for all except first comd + stdout with fd[1] for all except last comd
+// char **comd: each segment of the pipe; array of commands to exec
+// int num_commands: numbers of commands in the pipe
+void pipefunc(char **comd, int num_commands){ 
+  int fd[2], infd = STDIN_FILENO;
+  for (int i = 0; i <= num_commands; i++) {
+    if (pipe(fd) == -1){
+      perror("pipe failed");
+      exit(1);
     }
-    n++;
+    pid_t p = fork();
+    if (p == 0) {
+      if (i != 0) {
+        dup2(infd, 0);
+      }
+      if (i != num_commands){
+        dup2(fd[1], 1);
+      }
+      parse_redir(comd[i]);
+      exit(1);
+    } 
+    else if (p < 0) {
+      perror("fork failed");
+      exit(1);
+    }
+    else {
+      // store fd[0] for the next iterate
+      int n;
+      wait(&n);
+      infd = fd[0];
+      close(fd[1]);
+    }
   }
   return '0';
 }
 
+// void prompt(): displays the prompt, processes user input
+// shows directory, processes input, parses input, executes with children
 void prompt(){
-  char* args[32];
-  char* comd[32];
-  char cwd[1024];
-  char input[1024];
-  char* temp;
+	char *cmds[1000]; // array for semicolon seperated commands
+  char cwd[1024]; // curr working directory buff
+  char input[1024]; // input buffer
+
+  // curr working directory
   if (getcwd(cwd, sizeof(cwd)) == NULL){
     perror("could not get path");
     exit(1);
   }
+
+  // prompt for input
   if (getinput(input, sizeof(input)) != 1){
     exit(1);
   }
+
+  // remove new line
   remove_newline(input);
+
+  // enter case
+  if (strlen(input) == 0){
+    return;
+  }
+
+  // exit case
+  if (strcmp(input,"exit") == 0){
+    exit(0);
+  }
+
+  // split input into commands by semicolon
   char cop[1024];
   strcpy(cop, input);
   char *copy = cop;
-  char c = ' ';
-  char buff[1024];
+
+  // semicolon
   int numcmds = 0;
-  while ((comd[numcmds] = strsep(&copy,";")) != NULL){
+  while ((cmds[numcmds] = strsep(&copy,";")) != NULL){
     numcmds++;
   }
   char * file;
@@ -85,202 +282,19 @@ void prompt(){
   int currFd = 0;
   char p;
   for (int i = 0; i < numcmds; i++){
-    c = check(comd[i]);
-      p = hasPipe(comd[i]);
-      if (p == '|'){
-        int tempFd = open("temp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
-        int b = dup(STDOUT_FILENO);
-        int cFd = STDOUT_FILENO;
-        dup2(tempFd, STDOUT_FILENO);
-        char * str = strchr(comd[i], '|') + 2;
-        *(strchr(comd[i], '|') - 1) = '\0';
-        parse_args(comd[i], args);
-          pid_t p = fork();
-          if (p == 0){
-            execvp(args[0], args);
-            fprintf(stderr,"%s: command not found\n",args[0]);
-            exit(1);
-          }
-          else {
-            wait(NULL);
-            dup2(b, cFd);
-          }
-          tempFd = open("temp", O_RDONLY);
-          b = dup(STDIN_FILENO);
-          cFd = STDIN_FILENO;
-          dup2(tempFd, STDIN_FILENO);
-          // printf("%s\n", str);
-          parse_args(str, args);
-            p = fork();
-            if (p == 0){
-              execvp(args[0], args);
-              fprintf(stderr,"%s: command not found\n",args[0]);
-              exit(1);
-            }
-            else {
-              wait(NULL);
-              dup2(b, cFd);
-              continue;
-            }
-          }
-
-  //   p = hasPipe(comd[i]);
-  //   if (p == '|'){
-  //     int tempFd = open("temp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
-  //     int b = dup(STDOUT_FILENO);
-  //     int cFd = STDOUT_FILENO;
-  //     dup2(tempFd, STDOUT_FILENO);
-  //
-  //     char * temp = comd[i];
-  //     char * str2;
-  //     str2 = comd[i];
-  //     comd[i] = strchr(comd[i], '|') + 2;
-  //     *(comd[i] - 3) = '\0';
-  //     char c1 = 0;
-  //     char c2 = 0;
-  //     if ((c1 = check(str2))){
-  //       file = strchr(str2, '<') + 2;
-  //       *(strchr(str2, '<') - 1) = '\0';
-  //         fd = open(file, O_RDONLY);
-  //         printf("%s\n", file);
-  //         printf("%s\n", file);
-  //         if (fd < 0){
-  //           perror("file open failed");
-  //           exit(1);
-  //         }
-  //         backup = dup(STDIN_FILENO);
-  //         currFd = STDIN_FILENO;
-  //         dup2(fd, STDIN_FILENO);
-  //         close(fd);
-  //       }
-  //       parse_args(str2, args);
-  //       pid_t p = fork();
-  //       if (p == 0){
-  //         execvp(args[0], args);
-  //         fprintf(stderr,"%s: command not found\n",args[0]);
-  //         exit(1);
-  //       }
-  //       else {
-  //         wait(NULL);
-  //         dup2(backup, currFd);
-  //         dup2(b, cFd);
-  //         // continue;
-  //   }
-  //
-  //
-  //   b = dup(STDIN_FILENO);
-  //   cFd = STDIN_FILENO;
-  //   dup2(tempFd, STDIN_FILENO);
-  //   if ((c2 = check(comd[i]))){
-  //     file = strchr(comd[i], '>') + 2;
-  //     *(strchr(comd[i], '>') - 1) = '\0';
-  //     // printf("%s\n", comd[i]);
-  //       fd = open(file, O_RDONLY);
-  //       if (fd < 0){
-  //         perror("file open failed");
-  //         exit(1);
-  //       }
-  //       backup = dup(STDOUT_FILENO);
-  //       currFd = STDOUT_FILENO;
-  //       dup2(fd, STDOUT_FILENO);
-  //       close(fd);
-  //     }
-  //     parse_args(comd[i], args);
-  //     // printf("%s\n", comd[i]);
-  //     p = fork();
-  //     if (p == 0){
-  //       execvp(args[0], args);
-  //       fprintf(stderr,"%s: command not found\n",args[0]);
-  //       exit(1);
-  //     }
-  //     else {
-  //       wait(NULL);
-  //       dup2(backup, currFd);
-  //       dup2(b, cFd);
-  //       continue;
-  // }
-  //   // exit(0);
-  // }
-
-
-    else if (c == '>' || c == '<'){
-      if (c == '>'){
-        file = parse_right(c, comd[i]);
-        fd = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644 );
-        if (fd < 0){
-          perror("file open failed");
-          exit(1);
-        }
-        backup = dup(STDOUT_FILENO);
-        currFd = STDOUT_FILENO;
-        dup2(fd, STDOUT_FILENO);
-        close(fd);
-      }
-      else{
-        file = parse_right(c, comd[i]);
-        fd = open(file, O_RDONLY);
-        if (fd < 0){
-          perror("file open failed");
-          exit(1);
-        }
-        backup = dup(STDIN_FILENO);
-        currFd = STDIN_FILENO;
-        dup2(fd, STDIN_FILENO);
-        close(fd);
-         // comd[i] = strchr(comd[i], c) + 2;
-      }
-    }
-
-    parse_args(comd[i],args);
-
-    if (strcmp(args[0],"exit") == 0){
-      exit(0);
-    }
-    else if (strcmp(args[0],"cd") == 0){
-      cd(args[1]);
+    if (strchr(cmds[i],'|') || strchr(cmds[i],'<') || strchr(cmds[i],'>') ){
+      parse_pipe(cmds[i]);
     }
     else {
-
-      pid_t p = fork();
-      if (p == 0){
-        // redirection(c, file);
-        execvp(args[0], args);
-        fprintf(stderr,"%s: command not found\n",args[0]);
-        exit(1);
+      char* args[100]; // array to store command args
+      strtok(input, "\n");
+      parse_args(cmds[i],args);
+      if (strcmp(args[0],"cd") == 0){
+        cd(args[1]);
       }
       else {
-        wait(NULL);
-        dup2(backup, currFd);
-        continue;
+        execute(args);
       }
     }
   }
 }
-
-
-// char * pipe_cmds[32];
-// int num_pipes = 0;
-// char *command = comd[i];
-//
-// if (strchr(command, '|')){
-//   while ((pipe_cmds[num_pipes] = strsep(&command,"|")) != NULL){
-//     num_pipes++;
-//   }
-//   pipefunc(pipe_cmds,num_pipes);
-//   continue;
-// }
-// else if (c == '>' || c == '<'){
-//   char *file = parse_redirect(c, command);
-//   parse_args(command,args);
-//   pid_t p = fork();
-//   if (p == 0){
-//     redirection(c, file);
-//     execvp(args[0], args);
-//     perror("exec failed");
-//     exit(1);
-//   }
-//   else {
-//     wait(NULL);
-//     continue;
-//   }
-// }
