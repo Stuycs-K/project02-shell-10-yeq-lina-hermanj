@@ -1,9 +1,0 @@
-ls
-cat test.txt
-cd ..
-ls
-touch abcdef.txt
-ls
-rm abcdef.txt
-ls
-exit
