@@ -7,12 +7,15 @@
 #include <fcntl.h>
 #include "parse.h"
 
+// int err(): prints out error message
 int err(){
   printf("errno %d\n",errno);
   printf("%s\n",strerror(errno));
   exit(1);
 }
 
+// void cd(char * cmd): takes a char* cmd, checks if has no args (sends to home) or args (takes to directed path)
+// char* cmd: the path
 void cd(char * cmd) {
   if (cmd == NULL){
     cmd = getenv("HOME");
@@ -22,6 +25,8 @@ void cd(char * cmd) {
   }
 }
 
+// void execute(char * args[]): takes a char* args[], forks and execs child
+// char* args[]: args for command to exec
 void execute(char * args[]){
   pid_t p = fork();
   if (p < 0){
@@ -39,6 +44,8 @@ void execute(char * args[]){
   }
 }
 
+// void remove_newline(char * input): takes a char* input, removes newline from input
+// char* input: input line to change
 void remove_newline(char * input){
   int len = strlen(input);
   if (len > 0 && input[len - 1] == '\n') {
@@ -46,6 +53,9 @@ void remove_newline(char * input){
   }
 }
 
+// int getinput(char* input, size_t size): takes a char* input, size_t size. mimics terminal, takes userinput, and checks for cntrl+d. returns 1 if succeeds, 0 if not
+// char* input: buffer to store input
+// size_t size: buffer size
 int getinput(char* input, size_t size){
   printf("%s $ ",getcwd(input,size)); // mimic terminal
   fflush(stdout);
@@ -60,6 +70,8 @@ int getinput(char* input, size_t size){
   return 1;
 }
 
+// int pipe_count(char *args): takes a char* args, and counts the number of pipes
+// char *args: array of arguments in the input
 int pipe_count(char *args){
   int count = 0;
   for (int i = 0; i < strlen(args); i++){
@@ -68,6 +80,11 @@ int pipe_count(char *args){
   return count;
 }
 
+// void redirection(char **comd, char *input, char *output, int append_flag): for < > >>, assigns proper file perms, then forks and execvps proper operation, restores file descriptors after
+// char **comd: the command to execute
+// char *input: the input file name
+// char *output: the output file name
+// int append_flag: 1 for >>, 0 for > and <
 void redirection(char **comd, char *input, char *output, int append_flag){
   int flags;
   if (append_flag = 1){
@@ -114,6 +131,10 @@ void redirection(char **comd, char *input, char *output, int append_flag){
   return;
 }
 
+// void less_than(char **comd, char *input): redirects input from a file.
+// redirects stdin into input file, forks + execs, restores stdin
+// char **comd: the command to execute
+// char *input: the input file name
 void less_than(char **comd, char *input) {
 	int stdin = dup(0);
   int fd = open(input, O_RDONLY);
@@ -140,6 +161,11 @@ void less_than(char **comd, char *input) {
   return;
 }
 
+// void greater_than(char **comd, char *output, int append_flag): handles output redirection (>)
+// redirects stdout into output file, forks + execs, restores stout
+// char **comd: the command to execute
+// char *input: the input file name
+// int append_flag: 1 for append (>>), 0 for overwrite (>)
 void greater_than(char **comd, char *output, int append_flag) {
   int flags;
   int stdout = dup(1);
@@ -172,6 +198,10 @@ void greater_than(char **comd, char *output, int append_flag) {
   return;
 }
 
+// void pipefunc(char **comd, int num_commands): handles pipes
+// calls pipe() for each pipe, forks + execs, connects stdin with fd[0] for all except first comd + stdout with fd[1] for all except last comd
+// char **comd: each segment of the pipe; array of commands to exec
+// int num_commands: numbers of commands in the pipe
 void pipefunc(char **comd, int num_commands){ 
   int fd[2], infd = STDIN_FILENO;
   for (int i = 0; i <= num_commands; i++) {
@@ -181,11 +211,9 @@ void pipefunc(char **comd, int num_commands){
     }
     pid_t p = fork();
     if (p == 0) {
-      // for all except for the first comd, connect stdin with fd[0]
       if (i != 0) {
         dup2(infd, 0);
       }
-      // for all except for the last comd, connect stdout with fd[1]
       if (i != num_commands){
         dup2(fd[1], 1);
       }
@@ -206,27 +234,12 @@ void pipefunc(char **comd, int num_commands){
   }
 }
 
-void nospecial(char **args){
-  pid_t pid = fork();
-  if (pid == -1){
-    perror("fork failed");
-    return;
-  }
-  else if (pid == 0){
-    execvp(args[0], args);
-    perror("execvp");
-    exit(1);
-  }
-  int status;
-  wait(&status);
-  return;
-}
-
+// void prompt(): displays the prompt, processes user input
+// shows directory, processes input, parses input, executes with children
 void prompt(){
 	char *cmds[1000]; // array for semicolon seperated commands
   char cwd[1024]; // curr working directory buff
   char input[1024]; // input buffer
-  char* temp;
 
   // curr working directory
   if (getcwd(cwd, sizeof(cwd)) == NULL){
@@ -242,6 +255,11 @@ void prompt(){
   // remove new line
   remove_newline(input);
 
+  // enter case
+  if (strlen(input) == 0){
+    return;
+  }
+
   // exit case
   if (strcmp(input,"exit") == 0){
     exit(0);
@@ -251,9 +269,7 @@ void prompt(){
   char cop[1024];
   strcpy(cop, input);
   char *copy = cop;
-  //redirect parsing
-  char c = ' ';
-  char buff[1024];
+
   // semicolon
   int numcmds = 0;
   while ((cmds[numcmds] = strsep(&copy,";")) != NULL){

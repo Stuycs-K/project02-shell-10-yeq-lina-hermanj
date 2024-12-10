@@ -7,6 +7,10 @@
 #include <errno.h>
 #include "shell.h"
 
+// void parse_args( char * line, char ** arg_ary ): breaks apart a line into an array of arguments
+// splits input by spaces, skips empty spaces, terminates array with NULL
+// char *line: input string
+// char *arg_ary: array where args stored
 void parse_args( char * line, char ** arg_ary ){
   char * temp = line;
   int c = 0;
@@ -18,6 +22,9 @@ void parse_args( char * line, char ** arg_ary ){
   arg_ary[c + 1] = NULL;
 }
 
+// char checkorder(char * line): finds the first > or <
+// goes through string until finds < or >
+// char *line: input string
 char checkorder(char * line){
   int first;
   for (int i = 0; i < strlen(line); i++){
@@ -29,6 +36,9 @@ char checkorder(char * line){
   return (char)first;
 }
 
+// void parse_redir(char *input): parses redirection (> >> <) and calls each func to exec it
+// checks if input has redirect, if not just execute. apply  flags, and call proper func
+// char *line: input string
 void parse_redir(char *input){
   char *arg;
   char **args = malloc(4096);
@@ -74,19 +84,21 @@ void parse_redir(char *input){
     }
     free(comdarg);
   }
-  // no special
   else {
     count = 0;
     while ((arg = strtok_r(input, " ", &input))){
       args[count] = arg;
       count++;
     }
-    nospecial(args);
+    execute(args);
   }
   free(args);
   return;
 }
 
+// void parse_pipe(char *input): parses pipe and calls pipefunc to exec it
+// checks if input has pipe, if not call parse for redir
+// char *line: input string
 void parse_pipe(char *input){
   char *arg;
   char **args = malloc(4096);
