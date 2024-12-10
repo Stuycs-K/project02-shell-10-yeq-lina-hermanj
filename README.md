@@ -11,36 +11,56 @@ Joy Herman, Abigail Lin, Leo Ye
 4. exit and ^d to exit shell
 5. ./shell < lines.txt
    - but it prints next to the prompt
-6. redirects but not chained together
+6. redirects
+7. pipes
 
 ## Attempted to Implement
-1. combining redirects and pipes together
+1. ./shell < lines.txt doesn't work
 
 
 ## Function Headers
 int err(){}
-- for errno
+- prints out error message
 
 void cd(char * cmd) {}
-- cd
+- checks if has no args (sends to home) or args (takes to directed path)
+
+void execute(char * args[]){}
+- forks and execs child
 
 void remove_newline(char * input){}
 - removes the new line
 
 int getinput(char* input, size_t size){}
-- takes the input
+- mimics terminal, takes userinput, and checks for cntrl+d. returns 1 if succeeds, 0 if not
 
-char hasPipe(char * line){}
-- checks for pipe
+int pipe_count(char *args){}
+- counts the number of pipes
+
+void redirection(char **comd, char *input, char *output, int append_flag){}
+- handles redirection < > >>
+- assigns proper file perms, then forks and execvps proper operation, restores file descriptors after
+
+void less_than(char **comd, char *input){}
+- redirects input from a file
+
+void greater_than(char **comd, char *output, int append_flag){}
+- handles output redirection (>)
+
+void pipefunc(char **comd, int num_commands){}
+- handles pipes
 
 void prompt(){}
 - main logic, runs everything. parses and execs in here
 
-char * parse_right(char c, char * line){}
-- takes inputs with redirects and returns a pointer to the right side of the redirect and adds a terminating 0 to the end of the left.
-
 void parse_args( char * line, char ** arg_ary ){}
-- parses the input into an arg array for execvp
+- breaks apart a line into an array of arguments
 
-char check(char * line){}
-- checks for redirects and returns the type of redirect
+char checkorder(char * line){}
+- finds the first > or <
+
+void parse_redir(char *input){}
+- parses redirection (> >> <) and calls each func to exec it
+
+void parse_pipe(char *input){}
+- parses pipe and calls pipefunc to exec it
