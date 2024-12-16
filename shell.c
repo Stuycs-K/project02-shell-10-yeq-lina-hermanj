@@ -232,7 +232,7 @@ void pipefunc(char **comd, int num_commands){
       close(fd[1]);
     }
   }
-  return '0';
+  // return '0';
 }
 
 // void prompt(): displays the prompt, processes user input
